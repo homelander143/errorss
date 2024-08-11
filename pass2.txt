@@ -1,167 +1,106 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-// Function prototypes
-void display(FILE *intermediate_fp, FILE *symtab_fp, FILE *output_fp, FILE *objcode_fp);
-
-int main()
- {
-    // Declare file pointers
-    FILE *intermediate_fp, *symtab_fp, *output_fp, *objcode_fp;
-
-    // Open files for reading and writing
-    intermediate_fp = fopen("out.txt", "r");
-    symtab_fp = fopen("symtbl.txt", "r");
-    output_fp = fopen("output1.txt", "w");
-    objcode_fp = fopen("objcode.txt", "w");
-
-    // Check if files opened successfully
-    if (intermediate_fp == NULL || symtab_fp == NULL || output_fp == NULL || objcode_fp == NULL) 
-	{
-        perror("Error opening files");
-        return EXIT_FAILURE;
+#include<stdio.h>
+ #include<string.h>
+ #include<stdlib.h>
+ int main() {
+    char label[10], opcode[10], operand[10];
+    int address, finaddr, st, diff;
+    FILE *fp1, *fp2, *fp3, *fp4;
+    fp1 = fopen("assmlist.dat", "w");
+    fp2 = fopen("symtab.dat", "r");
+    fp3 = fopen("out.dat", "r");
+    fp4 = fopen("object.dat", "w");
+    if
     }
-
-    // Initialize variables
-    char label[10], opcode[10], operand[10], mnemonic[20][20] = {"LDA", "STA", "LDCH", "STCH", "MUL"};
-    char code[20][20] = {"33", "44", "53", "57", "20"};
-    int address, start, finaddr, prevaddr, diff;
-
-    // Read first line of intermediate file
-    fscanf(intermediate_fp, "%s %s %s", label, opcode, operand);
-
-    // Handle START directive
-    if (strcmp(opcode, "START") == 0) 
-	{
-        fprintf(output_fp, "\t%s\t%s\t%s\n", label, opcode, operand);
-        fprintf(objcode_fp, "H^%s^00%s^00%d\n", label, operand, finaddr);
-        fscanf(intermediate_fp, "%d %s %s %s", &address, label, opcode, operand);
-        start = address;
-        diff = prevaddr - start;
-        fprintf(objcode_fp, "T^00%d^%d", address, diff);
+ (fp1 == NULL || fp2 == NULL || fp3 == NULL || fp4 == NULL) {
+  perror("Error opening file");
+  return -1;
+    fscanf(fp3, "%s %s %s", label, opcode, operand);
+    //
+    if
     }
-
-    // Process each line until END directive is encountered
-    while (strcmp(opcode, "END") != 0) 
-	{
-        if (strcmp(opcode, "BYTE") == 0) 
-		{
-            fprintf(output_fp, "%d\t%s\t%s\t%s\t", address, label, opcode, operand);
-            int len = strlen(operand);
-            int actual_len = len - 3;
-            fprintf(objcode_fp, "^");
-            for (int i = 2; i < (actual_len + 2); i++) 
-			{
-                fprintf(output_fp, "%c", operand[i]);
-                fprintf(objcode_fp, "%c", operand[i]);
-            }
-            fprintf(output_fp, "\n");
-        } 
-		else if (strcmp(opcode, "WORD") == 0) 
-		{
-            int value = atoi(operand);
-            fprintf(output_fp, "%d\t%s\t%s\t%s\t00000%d\n", address, label, opcode, operand, value);
-            fprintf(objcode_fp, "^00000%d", value);
-        } 
-		else if (strcmp(opcode, "RESB") == 0 || strcmp(opcode, "RESW") == 0)
-		{
-            fprintf(output_fp, "%d\t%s\t%s\t%s\n", address, label, opcode, operand);
-        } else 
-		{
-            int j = 0;
-            while (strcmp(opcode, mnemonic[j]) != 0 && j < 5) 
-			{
-                j++;
-            }
-            if (j < 5) 
-			{
-                if (strcmp(operand, "COPY") == 0) 
-				{
-                    fprintf(output_fp, "%d\t%s\t%s\t%s\t%s0000\n", address, label, opcode, operand, code[j]);
-                } 
-				else 
-				{
-                    char symbol[10];
-                    int add;
-                    rewind(symtab_fp);
-                    while (fscanf(symtab_fp, "%s %d", symbol, &add) != EOF && strcmp(operand, symbol) != 0);
-                    fprintf(output_fp, "%d\t%s\t%s\t%s\t%s%d\n", address, label, opcode, operand, code[j], add);
-                    fprintf(objcode_fp, "^%s%d", code[j], add);
-                }
-            }
-        }
-        prevaddr = address;
-        fscanf(intermediate_fp, "%d %s %s %s", &address, label, opcode, operand);
+ Read the program starting address
+ (strcmp(opcode, "START") == 0) {
+  fscanf(fp3, "%x %s %s %s", &address, label, opcode, operand);
+  finaddr = address;
+  // Write header record
+  fprintf(fp4, "H^%s^00%x^00%x\n", label, address, finaddr - address);
+  st = address;
+  diff = address - st;
+  fprintf(fp4, "T^00%x^%x", address, diff);
+    while (strcmp(opcode, "END") != 0) {
+  // Process each line of assembly code
+  if (strcmp(opcode, "BYTE") == 0) {
+      // 
+Handle BYTE directive
+ len = strlen(operand);
+      fprintf(fp1, "%x\t%s\t%s\t%s\t", address, label, opcode, operand);
+      int
+      for
+      }
+ (int i = 2; i < len - 1; i++) {
+ fprintf(fp1, "%02x", operand[i]);
+ fprintf(fp4, "%02x", operand[i]);
+      fprintf(fp1, "\n");
+  } else if (strcmp(opcode, "WORD") == 0) {
+      // 
+Handle WORD directive
+      fprintf(fp1, "%x\t%s\t%s\t%s\t00000%s\n", address, label, opcode, operand, 
+operand);
+      fprintf(fp4, "^00000%s", operand);
+  } else if (strcmp(opcode, "RESB") == 0 || strcmp(opcode, "RESW") == 0) {
+      // 
+Handle RESB and RESW directives
+      fprintf(fp1, "%x\t%s\t%s\t%s\n", address, label, opcode, operand);
+  } else {
+      // 
+Handle other instructions
+      fprintf(fp1, "%x\t%s\t%s\t%s\t\n", address, label, opcode, operand);
+  }
+  fscanf(fp3, "%x %s %s %s", &address, label, opcode, operand);
     }
-
-    // Write END directive
-    fprintf(output_fp, "%d\t%s\t%s\t%s\n", address, label, opcode, operand);
-    fprintf(objcode_fp, "\nE^00%d", start);
-
-    // Close all files
-    fclose(objcode_fp);
-    fclose(output_fp);
-    fclose(symtab_fp);
-    fclose(intermediate_fp);
-
-    // Display contents of files
-    display(intermediate_fp, symtab_fp, output_fp, objcode_fp);
-
+    //
+ Write end record
+    fprintf(fp1, "%x\t%s\t%s\t%s\n", address, label, opcode, operand);
+    fprintf(fp4, "\nE^00%x\n", st);
+    //
+ Close all files
+    fclose(fp1);
+    fclose(fp2);
+    fclose(fp3);
+    fclose(fp4);
+    //
+ Print contents of files
+    printf("\nContents of assmlist.dat:\n");
+    fp1 = fopen("assmlist.dat", "r");
+    if
+ (fp1) {
+  char ch;
+  while ((ch = fgetc(fp1)) != EOF) {
+      printf("%c", ch);
+  }
+  fclose(fp1);
+    }
+    printf("\n\nContents of symtab.dat:\n");
+    fp2 = fopen("symtab.dat", "r");
+    if
+ (fp2) {
+  char ch;
+  while ((ch = fgetc(fp2)) != EOF) {
+      printf("%c", ch);
+  }
+  fclose(fp2);
+    }
+    printf("\n\nContents of object.dat:\n");
+    fp4 = fopen("object.dat", "r");
+    if
+ (fp4) {
+  char ch;
+  while ((ch = fgetc(fp4)) != EOF) {
+      printf("%c", ch);
+  }
+  fclose(fp4);
+    }
+    printf("\n\n");
+    printf("\nAssembly process completed.\n");
     return 0;
-}
-
-// Function to display contents of files
-void display(FILE *intermediate_fp, FILE *symtab_fp, FILE *output_fp, FILE *objcode_fp) 
-{
-    char ch;
-
-    // Display intermediate file
-    printf("\n\nThe contents of Intermediate file:\n\n");
-    rewind(intermediate_fp);
-    while ((ch = fgetc(intermediate_fp)) != EOF) 
-	{
-        printf("%c", ch);
-    }
-
-    // Display symbol table file
-    printf("\n\nThe contents of Symbol Table:\n\n");
-    rewind(symtab_fp);
-    while ((ch = fgetc(symtab_fp)) != EOF) 
-	{
-        printf("%c", ch);
-    }
-
-    // Display output file
-    printf("\n\nThe contents of Output file:\n\n");
-    rewind(output_fp);
-    while ((ch = fgetc(output_fp)) != EOF) 
-	{
-        printf("%c", ch);
-    }
-
-    // Display object code file
-    printf("\n\nThe contents of Object code file:\n\n");
-    rewind(objcode_fp);
-    while ((ch = fgetc(objcode_fp)) != EOF) 
-	{
-        printf("%c", ch);
-    }
-}
-
-
-//out.txt
-	PGM1	START	1000
-1000	**	LDA	ALPHA	
-1003	**	MUL	BETA	
-1006	**	STA	GAMMA	
-1009	ALPHA	WORD	2	
-1012	BETA	WORD	4	
-1015	GAMMA	REWD	1	
-1015	**	END	1000
-
-//symtbl.txt
-ALPHA	1009
-BETA	1012
-GAMMA	1015
-
+ }
