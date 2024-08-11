@@ -1,0 +1,444 @@
+Q.evaluation
+%{                                                                     
+#include<stdio.h>
+int n=1;
+void yyerror(char*);
+int yylex(void);
+%}
+%token  ID NUM
+%%
+aexp:ID '=' exp {printf("result is %d",$$)}
+       |exp {printf("result is %d",$1)}
+
+       ;
+exp:exp '+' term {$$=$1+$3;}
+     |exp '-' term {$$=$1-$3;}
+     |term {$$=$1;}
+    ;
+term:term '*' fact {$$=$1*$3;}
+      |term '/' fact {$$=$1/$3;}
+      |fact {$$=$1;}
+      ;
+fact:'('exp')' {$$=$2}
+    |NUM  {$$=$1;}
+    |ID {$$=$1;}
+    ;
+%%
+int main(){
+printf("exp enter");
+yyparse();
+if(n==0){
+printf("Wrong input\n");
+}else printf("Valid input\n");
+return 0;
+}
+%{
+#include"valid.tab.h"
+%}
+%%
+[a-zA-Z]+ {return ID;}
+[0-9]+ {yylval=atoi(yytext); return NUM;}
+[=$\(\)+*/\-] {return *yytext;}
+%%
+int yywrap(void){
+return 1;
+}
+/////////////////////////////////////
+
+void yyerror(char *s){
+n=0;
+}
+
+
+
+Q.<<<<<<<<<<<a^nb
+%{
+#include<stdio.h>
+int n=0;
+int c=0;
+%}
+%token A B
+%%
+exp:ten B   
+     { 
+           if (c>9)  
+              {
+                   n=1;
+                }
+      }
+     ;
+ten:ten A { c= c + 1;}
+    |A { c= c + 1;}
+   ;
+%%
+int main(){
+printf("enter anb:");
+yyparse();
+if(n==1){
+       printf("true");
+   }
+else{
+   printf("false");
+ }
+printf("=%d",c);
+return 0;
+}
+void yyerror(){
+n=0;
+}
+%{
+#include"anb.tab.h"
+%}
+%%
+[a] {return A;}
+[b] {return B;}
+[.] {}
+[\t\n] {}
+%%
+int yywrap(void){
+return 1;
+}
+////////////////////////////////
+
+
+%{
+#include <stdio.h>
+int flag = 0;
+int yylex();
+void yyerror();
+%}
+%token SW OP CP OB CB CH BR STAT SEM CL CS NUM DEF
+%start E
+%%
+E: STR { flag = 1; }
+  ;
+STR: SW OP CH CP OB CASES DEF CL STAT SEM CB    
+   ;
+CASES: CS NUM CL STAT SEM BR SEM
+       |CS NUM CL STAT SEM BR SEM CASES
+    ;
+%%
+int main() {
+  printf("Enter switch statement:\n");
+  yyparse();
+  if (flag == 1) {
+    printf("Valid statement\n");
+  }
+  return 0;
+}
+void yyerror() {
+  printf("Invalid statement: ");
+}
+//lex
+%{
+#include "switch.tab.h"
+%}
+
+%%
+"switch"   { return SW; }
+"("        { return OP; }
+")"        { return CP; }
+[a-zA-Z]   { return CH; }
+"{"        { return OB; }
+"}"        { return CB; }
+"default"  {return DEF;}
+"case"     { return CS; }
+[0-9]+     { return NUM; }
+"break"    { return BR; }
+";"        { return SEM; }
+"statement"  { return STAT; }
+":"        { return CL; }
+[\n\t ]+   { /* Ignore whitespace */ }
+.          { return yytext[0]; }
+%%
+
+int yywrap() {
+    return 1;
+}
+
+
+
+%{
+#include<stdio.h>
+void yyerror(char *s);
+int yylex(void);
+int n=0;
+%}
+%token S AS ALL QUO BR SEMI AND PER
+%%
+exp:S BR inp BR SEMI
+   ;
+inp:QUO alld QUO dec
+   ;
+alld:PER AS
+    |PER AS alld
+    ;
+dec:','ALL dec
+   |','ALL
+   |','AND ALL
+   |','AND ALL dec
+   ;
+%%
+int main(){
+printf("Enter the scanf statement\n");
+yyparse();
+if(n==1){
+printf("Wrong input\n");
+}else printf("Valid input\n");
+return 0;
+}
+void yyerror(char *s){
+n=1;
+printf("\nInvalid string\n");
+}
+
+
+%{
+#include"scan.tab.h"
+%}
+%%
+"scanf" {return S;}
+[dfsc] {return AS;}
+[\"] {return QUO;}
+[\(\)] {return BR;}
+[;] {return SEMI;}
+[,] {return *yytext;}
+[&] {return AND;}
+[%] {return PER;}
+[ \n\t] {}
+[a-zA-Z_]+ {return ALL;}
+%%
+int yywrap(void){
+return 1;
+}
+
+
+
+
+
+
+%{
+#include<stdio.h>
+void yyerror(char *s);
+int yylex(void);
+int n=0;
+%}
+%token P AS ALL QUO BR SEMI
+%%
+exp:P BR inp BR SEMI
+   ;
+inp:QUO ALL QUO dec
+   |QUO ALL QUO
+   ;
+dec:dec','ALL
+   |','ALL
+   ;
+%%
+int main(){
+printf("Enter the printf statement\n");
+yyparse();
+if(n==1){
+printf("Wrong input\n");
+}else printf("Valid input\n");
+return 0;
+}
+void yyerror(char *s){
+n=1;
+printf("\nInvalid string\n");
+}
+
+
+%{
+#include"print.tab.h"
+%}
+%%
+"printf" {return P;}
+[\"] {return QUO;}
+[\(\)] {return BR;}
+[;] {return SEMI;}
+[,] {return *yytext;}
+[ \n\t] {}
+[a-zA-Z_% ]+ {return ALL;}
+%%
+int yywrap(void){
+return 1;
+}
+
+
+
+
+
+
+%{
+#include <stdio.h>
+void yyerror(char *s);
+int yylex(void);
+int n = 0;
+%}
+
+%token DO WHILE LBR RBR OPE AND OR LF RF ALL SEMI
+%%
+exp: DO LF statements RF WHILE LBR cond RBR SEMI
+   ;
+
+cond: ALL OPE ALL OR
+    | ALL OPE ALL AND
+    | ALL OPE ALL
+    ;
+
+statements: ALL SEMI
+          | ALL SEMI statements
+          ;
+%%
+int main() {
+    printf("Enter the do-while loop statement\n");
+    yyparse();
+    if (n == 1) {
+        printf("\nWrong input\n");
+    } else {
+        printf("\nValid input\n");
+    }
+    return 0;
+}
+
+void yyerror(char *s) {
+    n = 1;
+    
+}
+
+
+%{
+#include"dowhile.tab.h"
+%}
+%%
+"do" {return DO;}
+"while" {return WHILE;}
+[\(] {return LBR;}
+[\)] {return RBR;}
+[\{] {return LF;}
+[\}] {return RF;}
+[;] {return SEMI;}
+"||" {return OR;}
+"&&" {return AND;}
+[<>=][=]* {return OPE;}
+[ \n\t] {}
+[a-zA-Z_]+ {return ALL;}
+%%
+int yywrap(void){
+return 1;
+}
+
+
+
+
+
+
+%{
+#include <stdio.h>
+%}
+%token I E OPE NUM NEWL ALL
+%%
+exp:I'('NUM OPE NUM')'NEWL'{'sta'}'el {printf("\nValid if else statement\n");}
+   |I'('NUM OPE NUM')' sta el {printf("\nValid if else statement\n");}
+   |I'('NUM OPE NUM')' sta {printf("\nValid if statement");}
+   ;
+el:E'{'sta'}'
+  |E sta
+  ;
+sta:ALL ';' NEWL sta
+   | ALL ';'
+   ;
+%%
+int main(){
+printf("Enter the string\n");
+yyparse();
+return 0;
+}
+
+void yyerror(char *s){
+printf("Invalid if else statement\n");
+}
+
+
+%{
+#include"if.tab.h"
+%}
+%%
+"if" {return IF;}
+"else" {return ELSE;}
+[\(] {return LBR;}
+[\)] {return RBR;}
+[\{] {return LF;}
+[\}] {return RF;}
+[;] {return SEMI;}
+"||" {return OR;}
+"&&" {return AND;}
+[<>=][=]* {return OPE;}
+[ \n\t] {}
+[a-zA-Z_]+ {return ALL;}
+%%
+int yywrap(void){
+return 1;
+}
+
+
+
+
+
+%{
+#include <stdio.h>
+void yyerror(char *s);
+int yylex(void);
+int n = 0;
+%}
+
+%token WHILE LBR RBR OPE AND OR LF RF ALL SEMI
+%%
+exp: WHILE LBR cond RBR LF statements RF
+   ;
+
+cond: ALL OPE ALL OR cond
+    | ALL OPE ALL AND cond
+    | ALL OPE ALL
+    ;
+
+statements: ALL SEMI
+          | ALL SEMI statements
+          ;
+%%
+int main() {
+    printf("Enter the while loop statement\n");
+    yyparse();
+    if (n == 1) {
+        printf("\nWrong input\n");
+    } else {
+        printf("\nValid input\n");
+    }
+    return 0;
+}
+
+void yyerror(char *s) {
+    n = 1;
+    
+}
+
+
+%{
+#include"while.tab.h"
+%}
+%%
+"while" {return WHILE;}
+[\(] {return LBR;}
+[\)] {return RBR;}
+[\{] {return LF;}
+[\}] {return RF;}
+[;] {return SEMI;}
+"||" {return OR;}
+"&&" {return AND;}
+[<>=][=]* {return OPE;}
+[ \n\t] {}
+[a-zA-Z_]+ {return ALL;}
+%%
+int yywrap(void){
+return 1;
+}
