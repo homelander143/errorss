@@ -1,106 +1,74 @@
 #include<stdio.h>
- #include<string.h>
- #include<stdlib.h>
- int main() {
-    char label[10], opcode[10], operand[10];
-    int address, finaddr, st, diff;
-    FILE *fp1, *fp2, *fp3, *fp4;
-    fp1 = fopen("assmlist.dat", "w");
-    fp2 = fopen("symtab.dat", "r");
-    fp3 = fopen("out.dat", "r");
-    fp4 = fopen("object.dat", "w");
-    if
+#include<string.h>
+#include<stdlib.h>
+void main(){
+    char opcode[10],mnemonic[10],code[10],operand[10],label[10];
+    char symbol[10], address[10];
+    int locctr, start, length;
+    FILE *intermediate, *output, *optab, *symtbl;
+    intermediate = fopen("out.txt", "r");
+    optab = fopen("optable.txt", "r");
+    symtbl = fopen("symtble.txt", "r");
+    output = fopen("output.txt", "w");
+    fscanf(intermediate, "%d %s %s %s", &locctr, label, opcode, operand);
+    if (strcmp(opcode, "START") == 0) {
+        start = locctr;
+        fscanf(intermediate, "%d %s %s %s", &locctr, label, opcode, operand);
     }
- (fp1 == NULL || fp2 == NULL || fp3 == NULL || fp4 == NULL) {
-  perror("Error opening file");
-  return -1;
-    fscanf(fp3, "%s %s %s", label, opcode, operand);
-    //
-    if
-    }
- Read the program starting address
- (strcmp(opcode, "START") == 0) {
-  fscanf(fp3, "%x %s %s %s", &address, label, opcode, operand);
-  finaddr = address;
-  // Write header record
-  fprintf(fp4, "H^%s^00%x^00%x\n", label, address, finaddr - address);
-  st = address;
-  diff = address - st;
-  fprintf(fp4, "T^00%x^%x", address, diff);
+    length = locctr - start;
+    fprintf(output, "H^%s^%06X^%06X\n", label, start, length);
+    fprintf(output, "T^%06X^", locctr);
+    int textstart = locctr;
+    char textRecord[70] = "";
+    int textlength = 0;
     while (strcmp(opcode, "END") != 0) {
-  // Process each line of assembly code
-  if (strcmp(opcode, "BYTE") == 0) {
-      // 
-Handle BYTE directive
- len = strlen(operand);
-      fprintf(fp1, "%x\t%s\t%s\t%s\t", address, label, opcode, operand);
-      int
-      for
-      }
- (int i = 2; i < len - 1; i++) {
- fprintf(fp1, "%02x", operand[i]);
- fprintf(fp4, "%02x", operand[i]);
-      fprintf(fp1, "\n");
-  } else if (strcmp(opcode, "WORD") == 0) {
-      // 
-Handle WORD directive
-      fprintf(fp1, "%x\t%s\t%s\t%s\t00000%s\n", address, label, opcode, operand, 
-operand);
-      fprintf(fp4, "^00000%s", operand);
-  } else if (strcmp(opcode, "RESB") == 0 || strcmp(opcode, "RESW") == 0) {
-      // 
-Handle RESB and RESW directives
-      fprintf(fp1, "%x\t%s\t%s\t%s\n", address, label, opcode, operand);
-  } else {
-      // 
-Handle other instructions
-      fprintf(fp1, "%x\t%s\t%s\t%s\t\n", address, label, opcode, operand);
-  }
-  fscanf(fp3, "%x %s %s %s", &address, label, opcode, operand);
+        if (strcmp(opcode, "BYTE") == 0) {
+            if (operand[0] == 'C') {
+                char temp[10];
+                strcpy(temp, operand + 2);
+                temp[strlen(temp) - 1] = '\0';
+                for (int i = 0; i < strlen(temp); i++) {
+                    char hex[3]; 
+                    sprintf(hex, "%02X", temp[i]); 
+                    strcat(textRecord, hex);
+                }
+                textlength += strlen(temp);
+            } else if (operand[0] == 'X') {
+                char temp[10];
+                strcpy(temp, operand + 2);
+                temp[strlen(temp) - 1] = '\0';
+                strcat(textRecord, temp);
+                textlength += strlen(temp) / 2;
+            }
+        } else if (strcmp(opcode, "WORD") == 0) {
+            char temp[7];
+            sprintf(temp, "%06X", atoi(operand)); 
+            strcat(textRecord, temp);
+            textlength += 3; 
+        } else {
+            fseek(optab, 0, SEEK_SET); 
+            while (fscanf(optab, "%s %s", code, mnemonic) != EOF) {
+                if (strcmp(opcode, mnemonic) == 0) {
+                    strcat(textRecord, code); 
+                    textlength += strlen(code) / 2; 
+                    break;
+                }
+            }
+        }
+        fscanf(intermediate, "%d %s %s %s", &locctr, label, opcode, operand);
+        if (strcmp(opcode, "END") == 0 || strlen(textRecord) + strlen(opcode) > 60) {
+            fprintf(output, "%02X%s\n", textlength, textRecord);            
+            if (strcmp(opcode, "END") != 0) {
+                fprintf(output, "T^%06X^", locctr);
+                strcpy(textRecord, "");
+                textlength = 0;
+            }
+        }
     }
-    //
- Write end record
-    fprintf(fp1, "%x\t%s\t%s\t%s\n", address, label, opcode, operand);
-    fprintf(fp4, "\nE^00%x\n", st);
-    //
- Close all files
-    fclose(fp1);
-    fclose(fp2);
-    fclose(fp3);
-    fclose(fp4);
-    //
- Print contents of files
-    printf("\nContents of assmlist.dat:\n");
-    fp1 = fopen("assmlist.dat", "r");
-    if
- (fp1) {
-  char ch;
-  while ((ch = fgetc(fp1)) != EOF) {
-      printf("%c", ch);
-  }
-  fclose(fp1);
-    }
-    printf("\n\nContents of symtab.dat:\n");
-    fp2 = fopen("symtab.dat", "r");
-    if
- (fp2) {
-  char ch;
-  while ((ch = fgetc(fp2)) != EOF) {
-      printf("%c", ch);
-  }
-  fclose(fp2);
-    }
-    printf("\n\nContents of object.dat:\n");
-    fp4 = fopen("object.dat", "r");
-    if
- (fp4) {
-  char ch;
-  while ((ch = fgetc(fp4)) != EOF) {
-      printf("%c", ch);
-  }
-  fclose(fp4);
-    }
-    printf("\n\n");
-    printf("\nAssembly process completed.\n");
-    return 0;
- }
+    fprintf(output, "E^%06X\n", start);
+    fclose(intermediate);
+    fclose(optab);
+    fclose(symtbl);
+    fclose(output);
+}
+
